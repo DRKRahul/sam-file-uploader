@@ -47,12 +47,12 @@ Resources:
         MySQSEvent:
           Type: SQS
           Properties:
-            Queue: S3EventsQueue
+            Queue: !GetAtt S3EventsQueue.Arn
       Policies:
         - SQSPollerPolicy:
             QueueName: S3EventsQueue
-        - S3ReadAccessPolicy:
-            Bucket: !Ref FilesBucket
+        - S3ReadPolicy:
+            BucketName: FilesBucket
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -62,18 +62,14 @@ Resources:
         EntryPoints: 
         - src/app.ts
   FilesBucket:
-    Type: AWS:S3:Bucket
+    Type: AWS::S3::Bucket
     Properties:
-      BucketName: FilesBucket
-  S3EventsQueue:
-    Type: AWS:SQS:Queue
-    Properties:
-      QueueName: S3EventsQueue
-  S3EventNotification:
-    Type: 'AWS::S3::BucketNotification'
-    Properties:
-      Bucket: !Ref FilesBucket
+      BucketName: 'files-bucket'
       NotificationConfiguration:
         QueueConfigurations:
           - Event: 's3:ObjectCreated:*'
             Queue: !GetAtt S3EventsQueue.Arn
+  S3EventsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: S3EventsQueue

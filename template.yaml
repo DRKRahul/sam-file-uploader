@@ -7,7 +7,8 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 180
+    MemorySize: 1024
     Environment:
       Variables:
         FILES_BUCKET_NAME: !Ref FilesBucket
@@ -40,7 +41,7 @@ Resources:
   S3EventHandlerFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Handler: src/app.handler
+      Handler: src/app.fileParser
       Runtime: nodejs20.x
       CodeUri: .
       Events:
@@ -53,6 +54,9 @@ Resources:
             QueueName: S3EventsQueue
         - S3ReadPolicy:
             BucketName: FilesBucket
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref EmailSNSTopic 
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -73,3 +77,8 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: S3EventsQueue
+      VisibilityTimeout: 300
+  EmailSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: 'email-sns-topic'
